@@ -130,6 +130,10 @@
         (car lat)
         (pick (sub1 n)(cdr lat)))))
 
+(define pick
+  (lambda (n lat)
+    (list-ref lat (sub1 n))))
+
 (pick 3 '(a b c d e f g))
 ; -> c
 
@@ -156,7 +160,6 @@
                            n (pick n rev) tup rev-pre))
           (cons (pick n rev)
                 (scramble-b (cdr tup) rev))))))
-
 
 ; (1 1 1 3 4 2 1 1 9 2) -> (1 1 1 1 1 4 1 1 1 9)
 (scramble '(1 1 1 3 4 2 1 1 9 2))
@@ -200,6 +203,17 @@
 ;; n = 10, ret = 2, tup = (10), rev-pre = (2 8 1 4 3 2 1 3 2 1)
 ;; (1 1 1 1 1 1 1 1 2 8 2)
 
+
+(define scramble
+  (lambda (tup)
+    (letrec ((iter (lambda (t rev-pre)
+                     (if (null? t)
+                         '()
+                         (let* ((n (car t))
+                                (rev (cons n rev-pre)))
+                           (cons (pick n rev)
+                                 (iter (cdr t) rev)))))))
+      (iter tup '()))))
 
 ; fold, fold-right
 (fold (lambda (x y z)
