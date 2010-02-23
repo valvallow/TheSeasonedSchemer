@@ -1,5 +1,7 @@
 ;;; the seasoned schemer
 
+;; capter.11
+
 ;; member?
 
 (define member?
@@ -215,27 +217,110 @@
                                  (iter (cdr t) rev)))))))
       (iter tup '()))))
 
-; fold, fold-right
-(fold (lambda (x y z)
-        (display (format "x = ~a, y = ~a, z = ~a\n" x y z))
-        (+ x y z)) 0 '(1 1 1) '(1 1 1))
-;; x = 1, y = 1, z = 0
-;; x = 1, y = 1, z = 2
-;; x = 1, y = 1, z = 4
-;; 6
 
-(fold (lambda (m n o r)
-        (display (format "m = ~a, n = ~a, o = ~a, r = ~a\n" m n o r))
-        (+ m n o r)) 0 '(1 1 1) '(1 1 1) '(1 1 1))
-;; m = 1, n = 1, o = 1, r = 0
-;; m = 1, n = 1, o = 1, r = 3
-;; m = 1, n = 1, o = 1, r = 6
-;; 9
+;; chapter.12
 
-(fold-right (lambda (x y z)
-              (display (format "x = ~a, y = ~a, z = ~a\n" x y z))
-              (cons x (cons y z))) '() '(1 2 3) '(a b c))
-;; x = 3, y = c, z = ()
-;; x = 2, y = b, z = (3 c)
-;; x = 1, y = a, z = (2 b 3 c)
-;; (1 a 2 b 3 c)
+; multirember
+
+; standard
+(define (multirember a lat)
+  (cond ((null? lat) '())
+        ((eq? a (car lat))(multirember a (cdr lat)))
+        (else (cons (car lat)
+                    (multirember a (cdr lat))))))
+
+(multirember 'a '(a b c d a b c d))
+      
+
+; fold
+(define (multirember a lat)
+  (fold (lambda (e l)
+          (if (eq? a e)
+              l
+              (cons e l)))
+        '()
+        lat))
+
+(multirember 1 '(1 2 3 1 2 3 1 2 3))
+
+
+; the seasoned schemer
+; y combinator
+(define Y
+  (lambda (f)
+    ((lambda (g)
+       (g g))
+     (lambda (h)
+       (f (lambda (x)
+            ((h h) x)))))))
+
+((Y (lambda (f)
+     (lambda (n)
+       (if (zero? n)
+           1
+           (* n (f (- n 1))))))) 5)
+
+(define multirember
+  (lambda (a lat)
+    ((Y (lambda (mr)
+          (lambda (lat)
+            (cond ((null? lat) '())
+                  ((eq? a (car lat))(mr (cdr lat)))
+                  (else (cons (car lat)
+                              (mr (cdr lat))))))))
+     lat)))
+
+(multirember 'a '(a b c a b c a b c))
+
+(define multirember
+  (lambda (a lat)
+    (((lambda (f)
+        ((lambda (g)
+           (g g))
+         (lambda (h)
+           (f (lambda (x)
+                ((h h) x))))))
+      (lambda (mr)
+        (lambda (lat)
+          (cond ((null? lat) '())
+                ((eq? a (car lat))(mr (cdr lat)))
+                (else (cons (car lat)
+                            (mr (cdr lat))))))))
+     lat)))
+
+(multirember 1 '(1 2 1 2 1 2 3))
+
+
+;; length
+
+(define add1
+  (lambda (n)
+    (+ n 1)))
+
+;; (define length 'hoge)
+;; (display length)
+
+;; (define length
+;;   (with-module gauche length))
+
+(define length
+  (Y (lambda (length)
+       (lambda (l)
+         (cond ((null? l) 0)
+               (else (add1 (length (cdr l)))))))))
+
+(length '(1 2 3))
+
+
+; letrec
+
+(define multirember
+  (lambda (a lat)
+    (letrec ((mr (lambda (l)
+                   (cond ((null? l) '())
+                         ((eq? a (car l))(mr (cdr l)))
+                         (else (cons (car l)
+                                     (mr (cdr l))))))))
+      (mr lat))))
+
+(multirember 'a '(a b a b a b c a))
