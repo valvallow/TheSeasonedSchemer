@@ -244,6 +244,17 @@
 (multirember 1 '(1 2 3 1 2 3 1 2 3))
 
 
+; filter
+(use srfi-1)
+(define (multirember a lat)
+  (filter (lambda (e)
+            (not (eq? a e)))
+          lat))
+
+(multirember 'a '(a b c a b c))
+
+
+
 ; the seasoned schemer
 ; y combinator
 (define Y
@@ -324,3 +335,125 @@
       (mr lat))))
 
 (multirember 'a '(a b a b a b c a))
+
+
+; multirember
+
+; How To Become A Hacker: 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
+(define (multirember a lat)          
+  (if (null? lat)           
+      '()
+      ;; (car lat)も二回出てくるんでショートフォームitとして束縛
+      (let ((it (car lat))
+            ;; 再帰部分もrecurと言う変数に束縛してしまう。
+            (recur (multirember a (cdr lat))))
+        (if (eq? a it)   ;itの使いまわし
+            recur   ;recurの使いまわし
+            (cons it recur)))))        ;itとrecurの使いまわし
+
+(define (multirember a lat)          
+  (if (null? lat)           
+      '()
+      (let ((it (car lat))
+            (recur (multirember a (cdr lat))))
+        (if (eq? a it)
+            recur
+            (cons it recur)))))
+
+(multirember 'a '(a a a b b b c c  c a a a))
+
+; call/cc - 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
+(define (multirember a lat)
+  (call/cc
+   (lambda (k)
+     (let ((it (car (if (null? lat)
+                        (k '())
+                        lat)))
+           (recur (multirember a (cdr lat))))
+       (if (eq? a it)
+           recur
+           (cons it recur))))))
+
+(multirember 1 '(1 2 1 2 3 4  5 5 61 1 1 ))
+
+
+; rember-f - The Little Schemer
+(define rember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond ((null? lat) '())
+            ((test? a (car lat))(cdr lat))
+            (else (cons (car lat)
+                        ((rember-f test?) a (cdr lat))))))))
+
+(define rem-eq?
+  (rember-f eq?))
+
+(rem-eq? 'a '(b a b a b))
+
+
+; multirember -> multirember-f
+
+; The Seasoned Schemer
+(define multirember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond ((null? lat) '())
+            ((test? a (car lat))((multirember-f test?) a (cdr lat)))
+            (else (cons (car lat)
+                        ((multirember-f test?) a (cdr lat))))))))
+
+((multirember-f eq?) 'a '(a b c a b c))
+
+; fold
+(define (multirember-f test?)
+  (lambda (a lat)
+    (fold (lambda (e l)
+            (if (test? a e)
+                l
+                (cons e l)))
+          '()
+          lat)))
+
+((multirember-f eq?) 'a '(a b c a b c))
+
+; 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
+(define (multirember-f test?)
+  (lambda (a lat)
+    (if (null? lat)
+        '()
+        (let ((b (car lat))
+              (mr ((multirember-f test?) a (cdr lat))))
+          (if (test? a b)
+              mr
+              (cons b mr))))))
+
+((multirember-f eq?) 'a '(a b c d a b c d))
+
+
+; letrec multirember-f - The Seasoned Schemer
+(define multirember-f
+  (lambda (test?)
+    (letrec ((m-f (lambda (a lat)
+                    (cond ((null? lat) '())
+                          ((test? a (car lat))(m-f a (cdr lat)))
+                          (else (cons (car lat)
+                                      (m-f a (cdr lat))))))))
+      m-f)))
+
+((multirember-f eq?) 1 '(1 2 3 4 5 1 2 3 1 2 3 1 2))
+
+
+; letrec multirember - The Seasoned Schemer
+(define multirember
+  (letrec ((multirember
+            (lambda (a lat)
+              (cond ((null? lat) '())
+                    ((eq? a (car lat))(multirember a (cdr lat)))
+                    (else (cons (car lat)
+                                (multirember a (cdr lat))))))))
+    multirember))
+
+(multirember 'a '(a b a b a b c a))
+
+
