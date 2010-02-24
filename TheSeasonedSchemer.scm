@@ -1,4 +1,4 @@
-;;; the seasoned schemer
+;;; the sEasoned schemer
 
 ;; capter.11
 
@@ -455,5 +455,116 @@
     multirember))
 
 (multirember 'a '(a b a b a b c a))
+
+
+
+; member?
+
+; The Little Schemer
+(define member?
+  (lambda (a lat)
+    (cond ((null? lat) #f)
+          ((eq? a (car lat)) #t)
+          (else (member? a (cdr lat))))))
+
+(member? 'b '(a b c))
+(member? 'd '(a b c))
+
+(define member?
+  (lambda (a lat)
+    (cond ((or (null? lat)
+               (not (eq? a (car lat)))) #f)
+          (else (member? a (cdr lat))))))
+
+(member? 3 '(1 2 3 4 5))
+(member? 6 '(1 2 3 4 5))
+
+; and or
+(define (member? a lat)
+  (and (not (null? lat))
+       (or (eq? a (car lat))
+           (member? a (cdr lat)))))
+
+(member? 'c '(a b c d e f))
+(member? 1 '(a b c d e f))
+
+; any
+(use srfi-1)
+(define (member? a lat)
+  (any (lambda (e)
+         (eq? e a))
+       lat))
+
+(member? 'a '(a b c))
+(member? 'd '(a b c))
+
+
+; The Seasoned Schemer
+
+(define member?
+  (lambda (a lat)
+    ((letrec ((yes? (lambda (l)
+                      (cond ((null? l) #f)
+                            ((eq? a (car l)) #t)
+                            (else (yes? (cdr l)))))))
+       yes?)
+     lat)))
+
+(member? 'a '(a b c))
+(member? 'd '(a b c))
+
+
+(define member?
+  (lambda (a lat)
+    (letrec ((yes? (lambda (l)
+                     (cond ((null? l) #f)
+                           ((eq? a (car l)) #t)
+                           (else (member? a (cdr l)))))))
+      (yes? lat))))
+
+(member? 'a '(a b c))
+(member? 'd '(a b c))
+
+
+; union
+
+; The Little Schemer
+(define union
+  (lambda (set1 set2)
+    (cond ((null? set1) set2)
+          ((member? (car set1) set2)
+           (union (cdr set1) set2))
+          (else (cons (car set1)
+                      (union (cdr set1) set2))))))
+
+(union '(1 2 3 4 5 6) '(3 4 5 6 7 8 9 10))
+(union '(tomatos and macaroni casserole) '(macaroni and cheese))
+
+; fold-right
+(define (union set1 set2)
+  (fold-right (lambda (e l)
+                (if (member? e set2)
+                    l
+                    (cons e l)))
+              set2
+              set1))
+
+(union '(1 2 3 4 5 6) '(3 4 5 6 7 8 9 10))
+(union '(tomatos and macaroni casserole) '(macaroni and cheese))
+
+
+; The Seasoned Schemer
+(define union
+  (lambda (set1 set2)
+    (letrec ((U (lambda (set)
+                  (cond ((null? set) set2)
+                        ((member? (car set) set2)
+                         (U (cdr set)))
+                        (else (cons (car set)
+                                    (U (cdr set))))))))
+      (U set1))))
+
+(union '(1 2 3 4 5 6) '(3 4 5 6 7 8 9 10))
+(union '(tomatos and macaroni casserole) '(macaroni and cheese))
 
 
