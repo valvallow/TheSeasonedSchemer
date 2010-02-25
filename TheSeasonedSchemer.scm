@@ -568,3 +568,125 @@
 (union '(tomatos and macaroni casserole) '(macaroni and cheese))
 
 
+(define union
+  (lambda (set1 set2)
+    (letrec
+        ((U (lambda (set)
+              (cond ((null? set) set2)
+                    ((M? (car set) set2)
+                     (U (cdr set)))
+                    (else (cons (car set)
+                                (U (cdr set)))))))
+         (M? (lambda (a lat)
+               (cond ((null? lat) #f)
+                     ((eq? a (car lat)) #t)
+                     (else (M? a (cdr lat)))))))
+      (U set1))))
+
+(union '(1 2 3 4 5 6) '(3 4 5 6 7 8 9 10))
+(union '(tomatos and macaroni casserole) '(macaroni and cheese))
+
+(define union
+  (lambda (set1 set2)
+    (letrec
+        ((U (lambda (set)
+              (cond ((null? set) set2)
+                    ((M? (car set) set2)
+                     (U (cdr set)))
+                    (else (cons (car set)
+                                (U (cdr set)))))))
+         (M? (lambda (a lat)
+               (letrec
+                   ((N? (lambda (l)
+                          (cond ((null? l) #f)
+                                ((eq? a (car l)) #t)
+                                (else (N? (cdr l)))))))
+                 (N? lat)))))
+      (U set1))))
+
+(union '(1 2 3 4 5 6) '(3 4 5 6 7 8 9 10))
+(union '(tomatos and macaroni casserole) '(macaroni and cheese))
+
+
+; two-in-a-row
+
+(define two-in-a-row?
+  (lambda (lat)
+    (letrec
+        ((W (lambda (a lat)
+              (cond ((null? lat) #f)
+                    (else (or (eq? a (car lat))
+                              (W (car lat)(cdr lat))))))))
+      (cond ((null? lat) #f)
+            (else (W (car lat)(cdr lat)))))))
+
+(two-in-a-row? '(a b c c d e))
+(two-in-a-row? '(a b c  d e f))
+
+(define two-in-a-row?
+  (letrec
+      ((W (lambda (a lat)
+            (cond ((null? lat) #f)
+                  (else (or (eq? a (car lat))
+                            (W (car lat)(cdr lat))))))))
+    (lambda (lat)
+      (cond ((null? lat) #f)
+            (else (W (car lat)(cdr lat)))))))
+
+(two-in-a-row? '(a b c c d e))
+(two-in-a-row? '(a b c  d e f))
+
+(define sum-of-prefixes
+  (lambda (tup)
+    (letrec ((S (lambda (sss tup)
+                  (cond ((null? tup) '())
+                        (else (cons (+ sss (car tup))
+                                    (S (+ sss (car tup))
+                                       (cdr tup))))))))
+      (S 0 tup))))
+
+(sum-of-prefixes '(1 2 3 4 5))
+
+(define sum-of-prefixes
+  (lambda (tup)
+    (reverse
+     (fold (lambda (e l)
+             (cons (if (null? l)
+                       e
+                       (+ e (car l)))
+                   l))
+           '()
+           tup))))
+
+(sum-of-prefixes '(1 2 3 4 5))
+
+
+; scramble
+
+(define scramble
+  (lambda (tup)
+    (letrec
+        ((P (lambda (t rp)
+              (cond ((null? t) '())
+                    (else (cons (pick (car t)
+                                      (cons (car t) rp))
+                                (P (cdr t)
+                                   (cons (car t) rp))))))))
+      (P tup '()))))
+
+(scramble '(1 2 3 4 5 6 7 8 9))
+
+
+(define scramble
+  (letrec
+      ((P (lambda (t rp)
+            (cond ((null? t) '())
+                  (else (cons (pick (car t)
+                                    (cons (car t) rp))
+                              (P (cdr t)
+                                 (cons (car t) rp))))))))
+    (lambda (tup)
+      (P tup '()))))
+
+(scramble '(1 2 3 4 5 6 7 8 9))
+
