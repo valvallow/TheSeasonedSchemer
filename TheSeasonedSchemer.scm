@@ -339,18 +339,7 @@
 
 ; multirember
 
-; How To Become A Hacker: 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
-(define (multirember a lat)          
-  (if (null? lat)           
-      '()
-      ;; (car lat)も二回出てくるんでショートフォームitとして束縛
-      (let ((it (car lat))
-            ;; 再帰部分もrecurと言う変数に束縛してしまう。
-            (recur (multirember a (cdr lat))))
-        (if (eq? a it)   ;itの使いまわし
-            recur   ;recurの使いまわし
-            (cons it recur)))))        ;itとrecurの使いまわし
-
+; How To Become A Hacker:http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
 (define (multirember a lat)          
   (if (null? lat)           
       '()
@@ -362,7 +351,7 @@
 
 (multirember 'a '(a a a b b b c c  c a a a))
 
-; call/cc - 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
+; call/cc - http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
 (define (multirember a lat)
   (call/cc
    (lambda (k)
@@ -417,7 +406,7 @@
 
 ((multirember-f eq?) 'a '(a b c a b c))
 
-; 再帰結果は束縛可能 http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
+; http://beta-reduction.blogspot.com/2010/02/define-multirember-lat-cond-null-lat-eq.html
 (define (multirember-f test?)
   (lambda (a lat)
     (if (null? lat)
