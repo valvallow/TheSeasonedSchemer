@@ -1,4 +1,4 @@
-;;; the sEasoned schemer
+;;; the Seasoned schemer
 
 ;; capter.11
 
@@ -679,3 +679,113 @@
 
 (scramble '(1 2 3 4 5 6 7 8 9))
 
+
+; intersect
+
+; (intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+; normal recur
+(define (intersect set1 set2)
+  (cond ((or (null? set1)
+             (null? set2)) '())
+        ((member? (car set1) set2) (cons (car set1)
+                                         (intersect (cdr set1) set2)))
+        (else (intersect (cdr set1) set2))))
+
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+;  -> (and macaroni)
+
+
+; normal recur
+(define (intersect set1 set2)
+  (if (or (null? set1)
+          (null? set2))
+      '()
+      (let ((a (car set1))
+            (n (intersect (cdr set1) set2)))
+        (if (member? a set2)
+            (cons a n)
+            n))))
+
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+
+; fold-right
+(use srfi-1)
+(define (intersect set1 set2)
+  (fold-right (lambda (e acc)
+                (if (member? e set2)
+                    (cons e acc)
+                    acc))
+              '()
+              set1))
+
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+
+; letrec
+(define (intersect set1 set2)
+  (letrec
+      ((int (lambda (s acc)
+              (cond ((null? s) '())
+                    ((member? (car s) set2)
+                     (cons (car s)(int (cdr s) acc)))
+                    (else (int (cdr s) acc))))))
+    (if (or (null? set1)
+            (null? set2))
+        '()
+        (int set1 '()))))
+
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+; letrec
+(define (intersect set1 set2)
+  (letrec
+      ((int (lambda (s acc)
+              (if (null? s)
+                  acc
+                  (let ((a (car s))
+                        (n (int (cdr s) acc)))
+                    (if (member? a set2)
+                        (cons a n)
+                        n))))))
+    (if (or (null? set1)
+            (null? set2))
+        '()
+        (int set1 '()))))
+                   
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+
+; The Seasoned Schemer
+(define intersect
+  (lambda (set1 set2)
+    (cond
+     ((null? set1)(quote ()))
+     ((member? (car set1) set2)
+      (cons (car set1)
+            (intersect (cdr set1) set2)))
+     (else (intersect (cdr set1) set2)))))
+
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
+
+; The Seasoned Schemer letrec
+(define intersect
+  (lambda (set1 set2)
+    (letrec
+        ((I (lambda (set)
+              (cond
+               ((null? set)(quote ()))
+               ((member? (car set) set2)
+                (cons (car set)
+                      (I (cdr set))))
+               (else (I (cdr set)))))))
+      (I set1))))
+(intersect '(tomatoes and macaroni) '(macaroni and cheese))
+; -> (and macaroni)
