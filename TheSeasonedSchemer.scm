@@ -987,3 +987,52 @@
 ;; #?="(stdin)":323:(car lset)
 ;; #?-    ()
 ;; ()
+
+; all in one ?
+(define intersectall
+  (lambda (lset)
+    (let/cc hop
+           (letrec
+               ((A (lambda (lset)
+                     (cond
+                      ((null? (car lset))
+                       (hop (quote ())))
+                      ((null? (cdr lset))
+                       (car lset))
+                      (else (I (car lset)
+                               (A (cdr lset)))))))
+                (I (lambda (s1 s2)
+                     (letrec
+                         ((J (lambda (s1)
+                               (cond
+                                ((null? s1)(quote ()))
+                                ((member? (car s1) s2)
+                                 (cons (car s1)
+                                            (J (cdr s1))))
+                                (else (J (cdr s1)))))))
+                       (cond
+                        ((null? s2)(hop (quote ())))
+                        (else (J s1)))))))
+             (cond
+              ((null? lset)(hop (quote ())))
+              (else (A lset)))))))
+
+(intersectall '((3 mangoes and)
+                ()
+                (3 diet hamburgers)))
+
+(intersectall '((3 mangoes and)
+                (3 kiwis and)
+                (3 hamburgers)))
+
+
+; rember
+
+(define (multirember a lat)
+  (fold (lambda (e acc)
+          (if (eq? e a)
+              acc
+              (cons e acc)))
+        '()
+        lat))
+
