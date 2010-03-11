@@ -348,6 +348,10 @@
 
 ; rember
 
+
+(use srfi-1)
+
+; fold
 (define (multirember a lat)
   (fold (lambda (e acc)
           (if (eq? e a)
@@ -355,4 +359,110 @@
               (cons e acc)))
         '()
         lat))
+
+(multirember 'a '(a b c a b c))
+; -> (c b c b)
+
+; The Little Schemer
+(define rember
+  (lambda (a lat)
+    (cond ((null? lat) '())
+          ((eq? a (car lat))(cdr lat))
+          (else (cons (car lat)
+                      (rember a (cdr lat)))))))
+
+(rember 'a '(a b c a b c))
+; -> (b c a b c)
+
+; The Seasoned Schemer
+(define rember
+  (letrec
+      ((R (lambda (lat)
+            (cond ((null? lat) '())
+                  ((eq? a (car lat))(cdr lat))
+                  (else (cons (car lat)
+                              (rember (cdr lat))))))))
+    (R lat)))
+
+(rember 'a '(a b c a b c))
+
+
+; rember-beyond-first
+
+; (rember-beyond-first 'roots '(noodles spaghetti spatzle bean-thread roots potatoes yam others rice))
+; -> (noodles spaghetti spatzle bean-thread)
+
+; fold
+(define (rember-beyond-first a lat)
+  (reverse
+   (let/cc hop
+     (fold (lambda (e acc)
+             (if (eq? e a)
+                 (hop acc)
+                 (cons e acc)))
+           '()
+           lat))))
+
+(rember-beyond-first 'roots '(noodles
+                              spaghetti spatzle bean-thread
+                              roots
+                              potatoes yam
+                              others rice))
+; -> (noodles spaghetti spatzle bean-thread)
+
+(rember-beyond-first 'others '(noodles
+                               spaghetti spatzle bean-thread
+                               roots
+                               potatoes yam
+                               others
+                               rice))
+; -> (noodles spaghetti spatzle bean-thread roots potatoes yam)
+
+(rember-beyond-first 'sweetthing '(noodles
+                               spaghetti spatzle bean-thread
+                               roots
+                               potatoes yam
+                               others
+                               rice))
+; -> (noodles spaghetti spatzle bean-thread roots potatoes yam others rice)
+
+; The Seasoned Schemer
+(define rember-beyond-first
+  (lambda (a lat)
+    (letrec
+        ((R (lambda (lat)
+              (cond
+               ((null? lat)(quote ()))
+               ((eq? (car lat) a)
+                (quote ()))
+               (else (cons (car lat)
+                           (R (cdr lat))))))))
+      (R lat))))
+
+(rember-beyond-first 'roots '(noodles
+                              spaghetti spatzle bean-thread
+                              roots
+                              potatoes yam
+                              others rice))
+; -> (noodles spaghetti spatzle bean-thread)
+
+(rember-beyond-first 'others '(noodles
+                               spaghetti spatzle bean-thread
+                               roots
+                               potatoes yam
+                               others
+                               rice))
+; -> (noodles spaghetti spatzle bean-thread roots potatoes yam)
+
+(rember-beyond-first 'sweetthing '(noodles
+                               spaghetti spatzle bean-thread
+                               roots
+                               potatoes yam
+                               others
+                               rice))
+; -> (noodles spaghetti spatzle bean-thread roots potatoes yam others rice)
+
+
+
+; rember-up-to-last
 
