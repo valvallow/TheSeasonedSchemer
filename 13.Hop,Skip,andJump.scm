@@ -463,6 +463,30 @@
 ; -> (noodles spaghetti spatzle bean-thread roots potatoes yam others rice)
 
 
-
 ; rember-up-to-last
 
+; The Seasoned Schemer
+(define rember-up-to-last
+  (lambda (a lat)
+    (let/cc skip
+      (letrec
+          ((R (lambda (lat)
+                (cond
+                 ((null? lat)(quote ()))
+                 ((eq? (car lat) a)
+                  (skip (R (cdr lat))))
+                 (else (cons (car lat)
+                             (R (cdr lat))))))))
+        (R lat)))))
+
+(rember-up-to-last 'cookies '(cookies
+                              chocolate mins
+                              caramel delight ginger snaps
+                              desserts
+                              chocolate mousse
+                              vannilla ice cream
+                              German chocolate cake
+                              more cookies
+                              gingerbreaddman chocolate
+                              chips brownies))
+; -> (gingerbreaddman chocolate chips brownies)
