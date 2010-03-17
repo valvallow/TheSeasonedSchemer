@@ -206,3 +206,125 @@
 (rember* 'salad '((Swedish rye)
                    (French (mustard salad turkey))
                    salad))
+
+
+; depth*
+
+; (define max (with-module gauche max))
+
+(define (depth* l)
+  (if (null? l)
+      1
+      (let ((kar (car l))
+            (d (depth* (cdr l))))
+        (if (list? kar)
+            (max (+ 1 (depth* kar))
+                 d)
+            d))))
+
+; fold
+(define (depth* l)
+  (fold (lambda (e acc)
+          (max (if (list? e)
+                   (+ 1 (depth* e))
+                   acc)
+               acc))
+        1 l))
+
+(depth* '((pickled) peppers (peppers pickled)))
+; -> 2
+(depth* '())
+; -> 1
+(depth* '(()
+          ((bitter butter)
+           (makes)
+           (batter
+            (bitter)))
+          butter))
+; -> 4
+
+
+; The Seasoned Schemer
+(define add1
+  (lambda (n)
+    (+ n 1)))
+
+(define depth*
+  (lambda (l)
+    (cond
+     ((null? l) 1)
+     ((atom? (car l))
+      (depth* (cdr l)))
+     (else
+      (cond
+       ((> (depth* (cdr l))
+           (add1 (depth* (car l))))
+        (depth* (cdr l)))
+       (else
+        (add1 (depth* (car l)))))))))
+
+(depth* '((pickled) peppers (peppers pickled)))
+; -> 2
+(depth* '())
+; -> 1
+(depth* '(()
+          ((bitter butter)
+           (makes)
+           (batter
+            (bitter)))
+          butter))
+; -> 4
+
+; The Seasoned Schemer letting
+(define depth*
+  (lambda (l)
+    (cond
+     ((null? l) 1)
+     ((atom? (car l))
+      (depth* (cdr l)))
+     (else
+      (let ((a (add1 (depth* (car l))))
+            (d (depth* (cdr l))))
+        (cond
+         ((> d a) d)
+         (else a)))))))
+
+(depth* '((pickled) peppers (peppers pickled)))
+; -> 2
+(depth* '())
+; -> 1
+(depth* '(()
+          ((bitter butter)
+           (makes)
+           (batter
+            (bitter)))
+          butter))
+; -> 4
+
+
+; The Seasoned Schemer, if
+(define max
+  (lambda (n m)
+    (if (> n m) n m)))
+
+(define depth*
+  (lambda (l)
+    (cond
+     ((null? l) 1)
+     ((atom? (car l))
+      (depth* (cdr l)))
+     (else (max
+            (add1 (depth* (car l)))
+            (depth* (cdr l)))))))
+      
+(depth* '((pickled) peppers (peppers pickled)))
+; -> 2
+(depth* '())
+; -> 1
+(depth* '(()
+          ((bitter butter)
+           (makes)
+           (batter
+            (bitter)))
+          butter))
+; -> 4
