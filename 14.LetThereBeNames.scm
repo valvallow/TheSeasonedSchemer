@@ -231,6 +231,8 @@
                acc))
         1 l))
 
+
+
 (depth* '((pickled) peppers (peppers pickled)))
 ; -> 2
 (depth* '())
@@ -328,3 +330,202 @@
             (bitter)))
           butter))
 ; -> 4
+
+
+; letting excersise scramble
+
+(define (pick n lat)
+  (list-ref lat (- n 1)))
+
+; The Seasoned Schemer
+(define scramble
+  (lambda (tup)
+    (letrec
+        ((P (lambda (tup rp)
+              (cond
+               ((null? tup)(quote ()))
+               (else
+                (let ((rp (cons (car tup) rp)))
+                  (cons (pick (car tup) rp)
+                        (P (cdr tup) rp))))))))
+      (P tup  (quote ())))))
+
+(define (scramble tup)
+  (letrec
+      ((P (lambda (tup rp)
+            (if (null? tup)
+                '()
+                (let ((rp (cons (car tup) rp)))
+                  (cons (pick (car tup) rp)
+                        (P (cdr tup) rp)))))))
+    (P tup '())))
+
+; again
+(define (scramble tup)
+  (letrec
+      ((P (lambda (tup rp)
+            (if (null? tup)
+                '()
+                (let ((kar (car tup)))
+                  (let ((rp (cons kar rp)))
+                    (cons (pick kar rp)
+                          (P (cdr tup) rp))))))))
+    (P tup '())))
+
+; named let
+(define (scramble tup)
+  (let loop ((tup tup)
+             (rp '()))
+    (if (null? tup)
+        '()
+        (let ((kar (car tup)))
+          (let ((rp (cons kar rp)))
+            (cons (pick kar rp)
+                  (loop (cdr tup) rp)))))))
+
+; fold2
+(use gauche.collection)
+(define (scramble tup)
+  (reverse
+   (fold2 (lambda (e acc rp)
+            (let ((rp (cons e rp)))
+              (values (cons (list-ref rp (- e 1))
+                            acc)
+                      rp)))
+          '() '() tup))
+         
+(scramble '(1 2 3 4 5 6 7 8 9))
+;; (1 1 1 1 1 1 1 1 1)
+;; (9 8 7 6 5 4 3 2 1)
+(scramble '(1 1 1 3 4 2 1 1 9 2))
+;; (9 1 1 1 4 1 1 1 1 1)
+;; (2 9 1 1 2 4 3 1 1 1)
+(scramble '(1 2 3 1 2 3 4 1 8 2 10))
+;; (2 8 2 1 1 1 1 1 1 1 1)
+;; (10 2 8 1 4 3 2 1 3 2 1)
+
+
+; letcc leftmost
+
+; The Seasoned Schemer
+(define leftmost
+  (lambda (l)
+    (let/cc skip
+      (lm l skip))))
+
+(define lm
+  (lambda (l out)
+    (cond
+     ((null? l)(quote ()))
+     ((atom? (car l))(out (car l)))
+     (else (let ()
+             (lm (car l) out)
+             (lm (cdr l) out))))))
+
+(leftmost '(((a) b (c))))
+; -> a
+
+
+; again
+(define leftmost
+  (letrec
+      ((lm (lambda (l out)
+             (cond
+              ((null? l)(quote ()))
+              ((atom? (car l))
+               (out (car l)))
+              (else
+               (let ()
+                 (lm (car l) out)
+                 (lm (cdr l) out)))))))
+    (lambda (l)
+      (let/cc skip
+        (lm l skip)))))
+
+(leftmost '(((a) b (c))))
+
+; again
+(define leftmost
+  (lambda (l)
+    (letrec
+        ((lm (lambda (l out)
+               (cond
+                ((null? l)(quote ()))
+                ((atom? (car l))
+                 (out (car l)))
+                (else
+                 (let ()
+                   (lm (car l) out)
+                   (lm (cdr l) out)))))))
+      (let/cc skip
+        (lm l skip)))))
+
+(leftmost '(((a) b (c))))
+
+; again
+(define leftmost
+  (lambda (l)
+    (let/cc skip
+      (letrec
+          ((lm (lambda (l out)
+                 (cond
+                  ((null? l)(quote ()))
+                  ((atom? (car l))
+                   (out (car l)))
+                  (else (let ()
+                          (lm (car l) out)
+                          (lm (cdr l) out)))))))
+        (lm l skip)))))
+
+(leftmost '(((a) b (c))))
+
+; again
+(define leftmost
+  (lambda (l)
+    (let/cc skip
+      (letrec
+          ((lm (lambda (l)
+                 (cond
+                  ((null? l)(quote ()))
+                  ((atom? (car l))
+                   (skip (car l)))
+                  (else (let ()
+                          (lm (car l))
+                          (lm (cdr l))))))))
+        (lm l)))))
+
+(leftmost '(((a) b (c))))
+
+
+(define (leftmost l)
+  (let/cc skip
+    (letrec
+        ((lm (lambda (l)
+               (if (null? l)
+                   '()
+                   (let ((kar (car l)))
+                     (if (list? kar)
+                         (let ()
+                           (lm kar)
+                           (lm (cdr l)))
+                         (skip kar)))))))
+      (lm l))))
+
+(leftmost '(((a) b (c))))
+
+; named let
+(define (leftmost l)
+  (let/cc skip
+    (let loop ((l l))
+      (if (null? l)
+          '()
+          (let ((kar (car l)))
+            (if (list? kar)
+                (let () ; begin
+                  (loop kar)
+                  (loop (cdr l)))
+                (skip kar)))))))
+
+
+(leftmost '(((a) b (c))))
+(leftmost '((() (a) b (c)))
