@@ -528,4 +528,103 @@
 
 
 (leftmost '(((a) b (c))))
-(leftmost '((() (a) b (c)))
+(leftmost '((() (a) b (c))))
+
+
+; rember1*
+
+(define rm
+  (lambda (a l oh)
+    (cond
+     ((null? l)(oh (quote no)))
+     ((atom? (car l))
+      (if (eq? (car l) a)
+          (cdr l)
+          (cons (car l)
+                (rm a (cdr l) oh))))
+     (else
+      (if (atom?
+           (let/cc oh
+             (rm a (car l) oh)))
+          (cons (car l)
+                (rm a (cdr l) oh))
+          (cons (rm a (car l) 0)
+                (cdr l)))))))
+
+(let/cc Say
+  (rm 'noodles '((food) more (food)) Say))
+; -> no
+
+(let/cc oh
+  (rm 'a '(1 2 3 (4 5 (6)(7)) 8 (9 (10 (((((11 12 13) a))b c ) d)) e)) oh))
+; -> (1 2 3 (4 5 (6) (7)) 8 (9 (10 (((((11 12 13))) b c) d)) e))
+
+(define rember1*
+  (lambda (a l)
+    (if (atom? (let/cc oh (rm a l oh)))
+        l
+        (rm a l (quote ())))))
+
+(rember1* 'noodles '((food) more (food)))
+; -> ((food) more (food))
+
+
+; again
+(define rember1*
+  (lambda (a l)
+    (let ((new-l (let/cc oh (rm a l oh))))
+      (if (atom? new-l)
+          l
+          new-l))))
+
+; again
+(define rm
+  (lambda (a l oh)
+    (cond
+     ((null? l)(oh (quote no)))
+     ((atom? (car l))
+      (if (eq? (car l) a)
+          (cdr l)
+          (cons (car l)
+                (rm a (cdr l) oh))))
+     (else
+      (let ((new-car
+             (let/cc oh
+               (rm a (car l) oh))))
+        (if (atom? new-car)
+            (cons (car l)
+                  (rm a (cdr l) oh))
+            (cons new-car (cdr l))))))))
+
+; try
+(define-syntax try
+  (syntax-rules ()
+    ((try var a . b)
+     (let/cc success
+       (let/cc var (success a)) . b))))
+
+
+; again
+(define rember1*
+  (lambda (a l)
+    (try oh (rm a l oh) l)))
+
+(rember1* 'noodles '((food) more (food)))
+; -> ((food) more (food))
+(rember1* 'a '(1 2 3 (4 5 (6)(7)) 8 (9 (10 (((((11 12 13) a))b c ) d)) e)))
+; -> (1 2 3 (4 5 (6) (7)) 8 (9 (10 (((((11 12 13))) b c) d)) e))
+
+
+(define (rember1* a l)
+  (if (null? l)
+      '()
+      (let ((kar (car l))
+            (kdr (cdr l)))
+        (if (eq? kar a)
+            kdr
+            (let ((new-car (if (pair? kar)
+                               (rember1* a kdr)
+                               kar)))
+              (cons new-car (if (equal? kar new-car)
+                                (rember1* a kdr)
+                                kdr)))))))
