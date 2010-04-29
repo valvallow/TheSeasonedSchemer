@@ -490,3 +490,11 @@ Ns
             0
             (f a))))))
 
+(define (biz f)
+  (let ((x 0))
+    (set! x (add1 x))
+    (lambda (a)
+      (if (= a x)
+          0
+          (f a)))))
+
