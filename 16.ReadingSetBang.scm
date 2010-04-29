@@ -421,3 +421,72 @@ Ns
 
 (length '(1 2 3 4 5))
 ; -> 5
+
+
+(define L
+  (lambda (length)
+    (lambda (l)
+      (cond ((null? l) 0)
+            (else (add1 (length (cdr l))))))))
+
+(define length
+  (let ((h (lambda (l)
+             0)))
+    (set! h
+          (L (lambda (arg)
+               (h arg))))))
+
+
+;; Y!
+
+(define Y!
+  (lambda (L)
+    (let ((h (lambda (l)
+               (quote ()))))
+      (set! h
+            (L (lambda (arg)
+                 (h arg))))
+      h)))
+
+(define Y-bang
+  (lambda (f)
+    (letrec
+        ((h (f (lambda (arg)
+                 (h arg)))))
+      h)))
+
+((Y! L) '(1 2 3))
+; -> 3
+
+
+
+;; D
+
+(define D
+  (lambda (depth*)
+    (lambda (s)
+      (cond
+       ((null? s) 1)
+       ((atom? (car s))
+        (depth* (cdr s)))
+       (else (max
+              (add1 (depth* (car s)))
+              (depth* (cdr s))))))))
+
+(define depth* (Y! D))
+
+(depth* '(1 (2 (3 (4 (5 (6 (7 (8)))))))))
+; -> 8
+
+
+;; biz
+
+(define biz
+  (lambda (f)
+    (let ((x 0))
+      (set! x (add1 x))
+      (lambda (a)
+        (if (= a x)
+            0
+            (f a))))))
+
