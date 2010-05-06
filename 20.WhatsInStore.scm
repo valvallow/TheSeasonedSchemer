@@ -3,12 +3,6 @@
 
 (use srfi-1)
 
-(define (the-empty-table name)
-  )
-
-(define global-table
-  '())
-
 (define (add1 n)
   (+ n 1))
 
@@ -29,6 +23,9 @@
 ;;          (map complement
 ;;               `(,pair? ,null?))))
 
+
+(define global-table '())
+
 (define (lookup table name)
   (table name))
 
@@ -38,12 +35,12 @@
         value
         (table name2))))
 
-(define (define? e)
-  (cond
-   ((atom? e) #f)
-   ((atom? (car e))
-    (eq? (car e)(quote define)))
-   (else #f)))
+;; (define (define? e)
+;;   (cond
+;;    ((atom? e) #f)
+;;    ((atom? (car e))
+;;     (eq? (car e)(quote define)))
+;;    (else #f)))
 
 ;; (define (define? e)
 ;;   (let ((kar (if (atom? e)
@@ -56,9 +53,9 @@
 ;;            (car e)
 ;;            #f) 'define))
 
-;; (define (define? e)
-;;   (eq? (and (pair? e)
-;;             (car e)) 'define))
+(define (define? e)
+  (eq? (and (pair? e)
+            (car e)) 'define))
 
 (define (*define e)
   (set! global-table
@@ -97,11 +94,6 @@
 
 (define (meaning e table)
   ((expression-to-action e) e table))
-
-(define (expression-to-action e)
-  (if (atom? e) 
-        (atom-to-action e) 
-        (list-to-action e)))
 
 (define (*quote e table)
   (text-of e))
@@ -384,7 +376,8 @@
 (define (arguments-of x)
   (car x))
 
-(define abort identity)
+(define abort '())
+
 
 (value '(define value
           (lambda (e)
@@ -394,4 +387,23 @@
                     ((define? e)(*define e))
                     (else (the-meaning e)))))))
 
+
+(value '(define x 3))
+(value 'x)
+; -> 3
+
+(value '(define y x))
+(value 'y)
+; -> 3
+
+(value '(set! x 5))
+(value 'x)
+; -> 5
+
+(value 'y)
+; -> 3
+
+(value 'car)
+
+(value 1)
 
