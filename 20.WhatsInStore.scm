@@ -1,7 +1,6 @@
+;; The Seasoned Schemer
 ;; chapter 20
 ;; What's in Store ?
-
-(use srfi-1)
 
 (define abort '())
 
@@ -18,24 +17,24 @@
        (not (null? a))))
 
 (define (text-of x)
-  (car (cdr x)))
+  (cadr x))
 
 (define (formals-of x)
-  (car (cdr x)))
+  (cadr x))
 
 (define (body-of x)
-  (cdr (cdr x)))
+  (cddr x))
 
 (define (ccbody-of x)
-  (cdr (cdr x)))
+  (cddr x))
 
 (define (name-of x)
-  (car (cdr x)))
+  (cadr x))
 
 (define (right-side-of x)
-  (if (null? (cdr (cdr x)))
+  (if (null? (cddr x))
       0
-      (car (cdr (cdr x)))))
+      (caddr x)))
 
 (define (cond-lines-of x)
   (cdr x))
@@ -49,13 +48,14 @@
   (car x))
 
 (define (answer-of x)
-  (car (cdr x)))
+  (cadr x))
 
 (define (function-of x)
   (car x))
 
 (define (arguments-of x)
   (cdr x))
+
 
 (define (lookup table name)
   (table name))
@@ -304,4 +304,3 @@
 
 
 
-       
