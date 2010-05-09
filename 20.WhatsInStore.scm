@@ -68,7 +68,7 @@
 
 (define (define? e)
   (eq? (and (pair? e)
-            (car e)) 'define))
+            (car e)) 'def))
 
 (define (*define e)
   (set! global-table
