@@ -49,7 +49,7 @@
 
 (define (answer-of x)
   (cadr x))
-
+èëÇ≠ÇÃÇ‡
 (define (function-of x)
   (car x))
 
@@ -105,7 +105,6 @@
   (unbox (lookup table e)))
 
 (define (*set e table)
-  (print "*set")
   (setbox
    (lookup table (name-of e))
    (meaning (right-side-of e) table)))
@@ -117,19 +116,58 @@
                           (box-all args)
                           table))))
 
+;; (define (beglis es table)
+;;   (cond
+;;    ((null? (cdr es))
+;;     (meaning (car es) table))
+;;    (else ((lambda (val)
+;;             (beglis (cdr es) table))
+;;           (meaning (car es) table)))))
+
+;; (define (beglis es table)
+;;   (let ((m (meaning (car es) table)))
+;;     (if (null? (cdr es))
+;;         m
+;;         ((lambda (val)
+;;            (beglis (cdr es) table)) m))))
+
+;; (define (beglis es table)
+;;   (let ((m (meaning (car es) table)))
+;;     (if (null? (cdr es))
+;;         m
+;;         (let ((val m))
+;;           (beglis (cdr es) table)))))
+
 (define (beglis es table)
-  (cond
-   ((null? (cdr es))
-    (meaning (car es) table))
-   (else ((lambda (val)
-            (beglis (cdr es) table))
-          (meaning (car es) table)))))
+  (let ((m (meaning (car es) table))
+        (d (cdr es)))
+    (if (null? d)
+        m
+        (beglis d table))))
+
+;; (define (box-all vals)
+;;   (if (null? vals)
+;;       '()
+;;       (cons (box (car vals))
+;;                (box-all (cdr vals)))))
+
+;; (define (box-all vals)
+;;   (letrec
+;;       ((rec
+;;         (lambda (vals acc)
+;;           (if (null? vals)
+;;               acc
+;;               (rec (cdr vals)
+;;                    (cons (box (car vals)) acc))))))
+;;     (rec (reverse vals) '())))
 
 (define (box-all vals)
-  (cond
-   ((null? vals) '())
-   (else (cons (box (car vals))
-               (box-all (cdr vals))))))
+  (let loop ((vals (reverse vals))
+             (acc '()))
+    (if (null? vals)
+        acc
+        (loop (cdr vals)
+              (cons (box (car vals)) acc)))))
 
 (define (multi-extend names vals table)
   (if (null? names)
@@ -142,17 +180,41 @@
   ((meaning (function-of e) table)
    (evlis (arguments-of e) table)))
 
-(define (evlis args table)
-  (if (null? args)
-      '()
-      ((lambda (val)
-         (cons val
-               (evlis (cdr args) table)))
-       (meaning (car args) table))))
+;; (define (evlis args table)
+;;   (if (null? args)
+;;       '()
+;;       ((lambda (val)
+;;          (cons val
+;;                (evlis (cdr args) table)))
+;;        (meaning (car args) table))))
 
-;; :car
-(define (ccar args-in-a-list)
-  (caar args-in-a-list))
+;; (define (evlis args table)
+;;   (if (null? args)
+;;       '()
+;;       (cons (meaning (car args) table)
+;;             (evlis (cdr args) table))))
+
+;; (define (evlis args table)
+;;   (letrec
+;;       ((rec
+;;         (lambda (args table acc)
+;;           (if (null? args)
+;;               acc
+;;               (rec (cdr args)
+;;                    table
+;;                    (cons (meaning (car args) table)
+;;                          acc))))))
+;;     (rec (reverse args) table '())))
+
+(define (evlis args table)
+  (let loop ((args (reverse args))
+             (table table)
+             (acc '()))
+    (if (null? args)
+        acc
+        (loop (cdr args) table
+              (cons (meaning (car args) table)
+                    acc)))))
 
 (define (a-prim p)
   (lambda (args-in-a-list)
